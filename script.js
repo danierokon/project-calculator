@@ -1,24 +1,23 @@
 const display = document.querySelector('#content');
 const btns = document.querySelectorAll('.btn');
-const decimalBtn = document.querySelector('#decimal');
 let result=0
 let firstNum=0;
 let secondNum=0;
 let operator;
 let negative = false;
-let allowDecimal = true;
+let waiting = false;
 
-function add(a,b){
-    return a+b;
+function add(a,b){    
+    return Number(a)+Number(b);
 }
 function subtract(a,b){
-    return a-b;    
+    return Number(a)-Number(b);    
 }
 function multiply(a,b){
-    return a*b;
+    return Number(a)*Number(b);
 }
-function divide(a,b){
-    return a/b;
+function divide(a,b){   
+    return Number(a)/Number(b);
 }
 function operate(a,b,op){    
     switch(op){
@@ -32,24 +31,62 @@ function operate(a,b,op){
             result = multiply(a,b);
             break;
         case '/':
-            result = divide(a,b);
+            if (b == 0){
+                result = 'Never gonna give you up~'
+            }
+            else {result = divide(a,b);}
             break;
 }return result;}
 
 function getInput(butt){
     if (butt.textContent == 'Clear'){
-        display.textContent = '0';
-        negative = false;
+        clearDisplay();
+    //remove waiting status if true, else regular backspace
     }else if(butt.textContent == 'Back'){
-        display.textContent = display.textContent.slice(0,-1);        
-    }else if(butt.textContent == '+/-'){
+        if (waiting === true){
+            waiting = false;
+            operator = null;
+            firstNum = null;
+        }else{
+        display.textContent = display.textContent.slice(0,-1);}
+    //toggle positive/negative       
+    }else if(butt.textContent == '+/-'){            
         if (negative === true){negative = false}
         else negative = true;
+    //operators button
+    }else if(butt.classList.contains('op')){        
+        //enter "waiting" mode so user can switch operator after clicked on one,
+        //like can click '+' first but then switch to '*'
+        if (waiting === false){
+        waiting = true;        
+        checkOperation();  
+        operator = `${butt.textContent}`;              
+        }else{
+            if (operator == `${butt.textContent}`){}
+            if (operator != `${butt.textContent}`){
+                operator = `${butt.textContent}`;
+            }} 
+    //equal button, prevent spam clicking with waiting
+    }else if(butt.textContent == '='){
+        if (waiting === false){
+        checkOperation();
+        waiting = true;}
+        
     }
-    else{
-    display.textContent += butt.textContent;}
-    checkDisplay();
-}
+    //numbers button, inputing numbers turn off waiting mode
+    //
+    else {
+        if(waiting === true){
+            negative = false;
+            waiting = false;
+            display.textContent = butt.textContent;}                                          
+        else if(waiting ===false){
+            display.textContent += butt.textContent;
+        }
+    }
+
+    checkDisplay();   
+    }
 
 for (let btn of btns){
     btn.addEventListener('click',(e) => getInput(btn))
@@ -95,13 +132,46 @@ function checkDisplay(){
     if (display.textContent == '0'){
         negative = false;
     }
+    //disable decimal button when decimal point exists
     if (display.textContent.includes('.')){
-        document.querySelector('#decimal').disabled = true;   }
-        else {document.querySelector('#decimal').disabled = false;}  
-    if (display.textContent.length > 12){
-        if(display.textContent === result){
+        document.querySelector('#decimal').disabled = true;}
+        else{document.querySelector('#decimal').disabled = false; } 
+    //setting max display length
+        if (display.textContent.length > 12){
+            if(display.textContent === result){
             display.textContent = display.textContent;
         }else {display.textContent = display.textContent.slice(0,12);}
     }
+    if (waiting ===true){
+        document.querySelector('#negativeToggle').disabled = true;}
+        else{document.querySelector('#negativeToggle').disabled = false;
+         
+    }
+    
         
 };
+
+function clearDisplay(){
+    display.textContent = '0';
+    negative = false;
+    waiting = false;
+    firstNum = null;
+    secondNum = null;
+    operator = null;
+    result = 0;
+}
+function checkOperation(){
+    if (!!firstNum){
+        secondNum = display.textContent;
+        display.textContent = operate(firstNum,secondNum,operator);
+        firstNum = display.textContent;
+        secondNum = null;        
+    }
+    if (!firstNum ||
+        (!!firstNum && waiting === true) ){
+        firstNum = display.textContent;
+    }
+    if (result < 0){
+        negative = true;
+    }
+}
