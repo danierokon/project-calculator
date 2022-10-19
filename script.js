@@ -175,3 +175,11 @@ function checkOperation(){
         negative = true;
     }
 }
+function pressButton(e){
+    const key = document.querySelector(`.btn[data-key="${e.keyCode}"]`)
+    if (!key)return;
+    getInput(key);
+    //console.log(key);
+
+}
+window.addEventListener('keydown', pressButton)
